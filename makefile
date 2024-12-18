@@ -6,7 +6,7 @@ menu:
 
 .PHONY: build	# イメージビルド
 build:
-	@docker build -t=bhook:latest .
+	@docker build -t=webhook:latest .
 
 .PHONY: start	# サーバー起動
 start:

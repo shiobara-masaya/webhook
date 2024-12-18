@@ -4,12 +4,14 @@ webhookサーバー
 
 ```sh
 # 準備
-sudo apt-get install apache2-utils
 
 # passwdファイル作成
+sudo apt-get install apache2-utils
 htpasswd -bc ./nginx/.htpasswd admin admin
 htpasswd -b ./nginx/.htpasswd user user
 
+# hostsファイル /etc/hosts 追記
+127.0.0.1    hoge.com
 
 # 環境起動
 make start
