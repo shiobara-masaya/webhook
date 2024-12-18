@@ -1,0 +1,42 @@
+# volumes:
+#   nginx-volume:
+#     driver: local
+#     name: nginx-volume
+
+# x-logging: &logging
+#   driver: loki
+#   options:
+#     # loki-url: "http://loki:3100/loki/api/v1/push"
+#     loki-url: "http://localhost:3100/loki/api/v1/push"
+
+services:
+  webhook:
+    image: webhook:latest
+    container_name: webhook
+    command: ["-verbose", "-hooks=/etc/webhook/hooks.yaml", "-hotreload"]
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./webhook:/etc/webhook
+    # logging: *logging
+    # depends_on:
+    #   - loki
+    # restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+      - "4443:443"
+    volumes:
+      - ./nginx/template:/etc/nginx/templates
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+      # - nginx-volume:/var/lib/postgresql/data
+    # logging: *logging
+    # depends_on:
+    #   - loki
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
