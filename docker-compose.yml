@@ -21,9 +21,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  nginx:
+  hoge.com:
     image: nginx:latest
-    container_name: nginx
+    container_name: hoge.com
     ports:
       - "80:80"
       - "443:443"
@@ -38,17 +38,35 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  root-ca:
-    image: root-ca:latest
-    container_name: root-ca
-    hostname: root-ca
+  client:
+    image: tls-example-client
+    container_name: client
+    # build:
+    #   context: .
+    #   dockerfile: ./compose/client/Dockerfile
     volumes:
-      - ./root-ca/pki:/etc/pki
+      - ./root-ca/pki/cert/rootCA.crt:/usr/local/share/ca-certificates/rootCA.crt
+      # - ./root-ca/pki/cert/intermediateCA.crt:/usr/local/share/ca-certificates/intermediateCA.crt
     tty: true
-    stdin_open: true
     # logging: *logging
     # depends_on:
     #   - loki
-    # restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+
+
+  # root-ca:
+  #   image: root-ca:latest
+  #   container_name: root-ca
+  #   hostname: root-ca
+  #   volumes:
+  #     - ./root-ca/pki:/etc/pki
+  #   tty: true
+  #   stdin_open: true
+  #   # logging: *logging
+  #   # depends_on:
+  #   #   - loki
+  #   # restart: always
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
