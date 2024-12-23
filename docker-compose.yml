@@ -12,7 +12,8 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ./webhook:/etc/webhook
+      - ./webhook/hooks.yaml:/etc/webhook/hooks.yaml
+      - ./webhook/hooks/scripts:/etc/webhook/hooks/scripts
     # logging: *logging
     # depends_on:
     #   - loki
@@ -34,5 +35,20 @@ services:
     # logging: *logging
     # depends_on:
     #   - loki
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  root-ca:
+    image: root-ca:latest
+    container_name: root-ca
+    hostname: root-ca
+    volumes:
+      - ./root-ca/pki:/etc/pki
+    tty: true
+    stdin_open: true
+    # logging: *logging
+    # depends_on:
+    #   - loki
+    # restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
