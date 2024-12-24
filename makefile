@@ -8,6 +8,10 @@ menu:
 webhook:
 	@docker build -t=webhook:latest ./webhook
 
+.PHONY: client	# clientイメージビルド
+client:
+	@docker build -t=client:latest ./client
+
 .PHONY: root-ca	# rootCAイメージビルド
 root-ca:
 	@docker build -t=root-ca:latest ./root-ca

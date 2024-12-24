@@ -39,11 +39,11 @@ services:
       - "host.docker.internal:host-gateway"
 
   client:
-    image: tls-example-client
+    # image: client:latest
     container_name: client
-    # build:
-    #   context: .
-    #   dockerfile: ./compose/client/Dockerfile
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile
     volumes:
       - ./root-ca/pki/cert/rootCA.crt:/usr/local/share/ca-certificates/rootCA.crt
       # - ./root-ca/pki/cert/intermediateCA.crt:/usr/local/share/ca-certificates/intermediateCA.crt
