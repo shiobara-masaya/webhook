@@ -1,4 +1,4 @@
 - id: test
   execute-command: "/etc/webhook/scripts/test.sh"
   command-working-directory: "."
-  pass-arguments-to-command: [ { "source": "payload", "name": "field1" }, { "source": "payload", "name": "data.field2" } ]
+  pass-arguments-to-command: [ { "source": "payload", "name": "field1" }, { "source": "payload", "name": "data.field2" }, { "source": "payload", "name": "data.field3" } ]

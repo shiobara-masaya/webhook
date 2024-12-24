@@ -21,10 +21,6 @@ start:
 	@docker compose up -d
 	@docker compose exec client bash -c "update-ca-certificates </dev/null"
 
-# リアルタイムログ出力
-logs:
-	@docker compose logs -f
-
 # クライアントログイン
 login: start
 	@docker compose exec -it client bash

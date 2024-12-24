@@ -45,15 +45,15 @@ docker logs --follow nginx
 ## テストwebhook発行
 
 ```sh
-# 認証なし:webhookサーバ直接
-curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"aaaa","data":{"field2":"bbbb"}}' http://localhost:9000/hooks/test
-# 認証あり:nginx経由
-curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"aaaa","data":{"field2":"bbbb"}}' http://hoge.com/hooks/test -u user:user
-# HTTPS認証あり:nginx経由
-curl -v -k -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"aaaa","data":{"field2":"bbbb"}}' https://hoge.com/hooks/test -u user:user
+# HTTP、サーバ直接、認証なし
+curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTP通信","data":{"field2":"サーバ直接", "field3":"認証なし"}}' http://localhost:9000/hooks/test
+# HTTP、nginx経由、認証あり
+curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTP通信","data":{"field2":"NGINX経由", "field3":"BASIC認証あり"}}' http://hoge.com/hooks/test -u user:user
+# HTTPS、nginx経由、認証あり
+curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTPS通信","data":{"field2":"NGINX経由", "field3":"BASIC認証あり"}}' https://hoge.com/hooks/test -u user:user
 ```
 
-## 自己ルート認証局、自己中間認証局、自己証明書発行
+## 自己ルート証明書、自己中間証明書、自己サーバ証明書発行
 
 ```sh
 # ルート証明書用秘密鍵生成
@@ -76,13 +76,7 @@ openssl req -new -key ./root-ca/pki/private/intermediateCA.pem -out ./root-ca/pk
 # 中間証明書生成
 openssl x509 -req -days 5844 -in ./root-ca/pki/cert/intermediateCA.csr -CA ./root-ca/pki/cert/rootCA.crt -CAkey ./root-ca/pki/private/rootCA.pem -CAcreateserial -out ./root-ca/pki/cert/intermediateCA.crt -extfile <(echo "basicConstraints=CA:TRUE")
 
-# サーバー証明書用の秘密鍵の生成
-openssl genpkey -algorithm RSA -out .keys/server.key
-# サーバー証明書の作成要求 (CSR)
-openssl req -new -key .keys/server.key -out .keys/server.csr -subj "/C=JP/ST=Tokyo/L=Chiyoda-ku/O=MyOrg/OU=MyUnit/CN=www.tls-example.com"
-# サーバー証明書の生成
-
-# サーバー証明書用秘密鍵生成
+# サーバー証明書用秘密鍵生成 →niginxに設定する秘密鍵
 openssl genrsa -out ./nginx/ssl/hoge.com.key 4096
 # サーバー証明書作成要求 (CSR)
 openssl req -new -key ./nginx/ssl/hoge.com.key -out ./nginx/ssl/hoge.com.csr -subj "/C=JP/ST=Tokyo/L=Shinjuku/CN=hoge.com"
@@ -92,10 +86,12 @@ openssl x509 -req -days 5844 -in ./nginx/ssl/hoge.com.csr -CA ./root-ca/pki/cert
 openssl x509 -text -noout -in ./nginx/ssl/hoge.com.crt
 # 個人情報交換ファイル(.pfx) PKCS#12
 openssl pkcs12 -export -inkey ./nginx/ssl/hoge.com.key -in ./nginx/ssl/hoge.com.crt -out ./nginx/ssl/hoge.com.pfx
-
-# 連鎖証明書作成
+# 連鎖証明書作成 →niginxに設定する証明書
 cat ./nginx/ssl/hoge.com.crt ./root-ca/pki/cert/intermediateCA.crt > ./nginx/ssl/hoge.com.chain.crt
 
+# クライアントにルート証明書登録
+sudo cp ./root-ca/pki/cert/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
+sudo update-ca-certificates
 ```
 
 ## 環境停止

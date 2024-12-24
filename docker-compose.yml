@@ -13,7 +13,7 @@ services:
       - "9000:9000"
     volumes:
       - ./webhook/hooks.yaml:/etc/webhook/hooks.yaml
-      - ./webhook/hooks/scripts:/etc/webhook/hooks/scripts
+      - ./webhook/scripts:/etc/webhook/scripts
     # logging: *logging
     # depends_on:
     #   - loki
@@ -48,6 +48,8 @@ services:
       - ./root-ca/pki/cert/rootCA.crt:/usr/local/share/ca-certificates/rootCA.crt
       # - ./root-ca/pki/cert/intermediateCA.crt:/usr/local/share/ca-certificates/intermediateCA.crt
     tty: true
+    stdin_open: true
+    # entrypoint: bash -c "update-ca-certificates </dev/null"
     # logging: *logging
     # depends_on:
     #   - loki
