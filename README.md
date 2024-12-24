@@ -29,6 +29,12 @@ htpasswd -b ./nginx/.htpasswd user user
 generateHosts = false
 ```
 
+### 他各種設定
+
+* プロキシ除外設定
+  * ターミナル環境変数
+  * docker クライアント、サーバ
+
 ## 環境起動
 
 ```sh
