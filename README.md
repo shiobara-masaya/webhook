@@ -105,3 +105,19 @@ sudo update-ca-certificates
 ```sh
 make stop
 ```
+
+
+## RocketChatへのAPI発行
+
+```sh
+curl --request POST --url https://10.169.38.56:3000/api/v1/login -H 'accept: application/json' -H 'content-type: application/json' -d '{"user": "shiobara.m", "password": "ddg173"}'
+
+
+curl -v -k -X POST -H 'Content-Type: application/json' --data '{"username":"DataDog","icon_emoji":":datadog:","text":"Example message","attachments":[{"title":"Rocket.Chat","title_link":"https://rocket.chat","text":"Rocket.Chat, the best open source chat","image_url":"/images/integration-attachment-example.png","color":"#764FA5"}]}' https://tools.tsp-service.jp/chat/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW
+curl -v -k -X POST -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"username":"DataDog","icon_emoji":":datadog:","text":"Example message","attachments":[{"title":"Rocket.Chat","title_link":"https://rocket.chat","text":"Rocket.Chat, the best open source chat","image_url":"/images/integration-attachment-example.png","color":"#764FA5"}]}' https://tools.tsp-service.jp/chat/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW | jq .
+curl -v -k -X POST -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"username":"DataDog","icon_emoji":":datadog:","text":"Example message","attachments":[{"title":"Rocket.Chat","title_link":"https://rocket.chat","text":"Rocket.Chat, the best open source chat","image_url":"/images/integration-attachment-example.png","color":"#764FA5"}]}' http://10.169.38.56:3000/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW | jq .
+
+curl -v -H 'Content-Type: application/json' --data '{"username":"DataDog","icon_emoji":":datadog:","text":"Example message","attachments":[{"title":"Rocket.Chat","title_link":"https://rocket.chat","text":"Rocket.Chat, the best open source chat","image_url":"/images/integration-attachment-example.png","color":"#764FA5"}]}' http://10.169.38.56:3000/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW | jq .
+https://tools.tsp-service.jp/chat/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW
+
+```
