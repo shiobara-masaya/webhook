@@ -41,7 +41,7 @@ build-image:
   - cat /root/.docker/config.json
   - docker info
   script:
-  - docker build -t $IMAGE_NAME .
+  - docker build -t $IMAGE_NAME ./webhook/dockerfile
   - docker push $IMAGE_NAME
   rules:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
