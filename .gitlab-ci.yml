@@ -1,0 +1,51 @@
+stages:
+- build
+
+variables:
+  HTTPS_PROXY: $JTP_PROXY_URL
+  HTTP_PROXY: $JTP_PROXY_URL
+  NO_PROXY: $JTP_NO_PROXY
+build-image:
+  stage: build
+  image: docker
+  services:
+  - name: docker:dind
+    command: [ '--insecure-registry=poc-registry.registry.svc.cluster.local:5000', '--insecure-registry=poc-gitlab-registry', --insecure-registry=poc-gitlab-registry:80 ]
+    alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: /certs
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: $DOCKER_TLS_CERTDIR/client
+    # REGISTRY_NAME: poc-registry.registry.svc.cluster.local:5000
+    REGISTRY_NAME: $CI_REGISTRY:80
+  before_script:
+  - echo "CI_REGISTRY:$CI_REGISTRY"
+  - echo "CI_REGISTRY_USER:$CI_REGISTRY_USER"
+  - echo "CI_REGISTRY_PASSWORD:$CI_REGISTRY_PASSWORD"
+  - echo "CI_COMMIT_SHORT_SHA:$CI_COMMIT_SHORT_SHA"
+  - echo "CI_PIPELINE_ID:$CI_PIPELINE_ID"
+  - echo "CI_PIPELINE_SOURCE:$CI_PIPELINE_SOURCE"
+  - echo "CI_MERGE_REQUEST_TARGET_BRANCH_NAME:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+  - echo "CI_COMMIT_TIMESTAMP:$CI_COMMIT_TIMESTAMP"
+  - echo "REGISTRY_NAME:$REGISTRY_NAME"
+  - BUILD_DATE=$(echo $CI_COMMIT_TIMESTAMP | sed -e 's/://g' -e 's/-//g' -e 's/T//g' | cut -c 1-14)
+  - echo "BUILD_DATE:$BUILD_DATE"
+  - IMAGE_TAG=$BUILD_DATE
+  - IMAGE_NAME=$REGISTRY_NAME/$CI_PROJECT_PATH/webhook:$IMAGE_TAG
+  - echo "IMAGE_NAME:$IMAGE_NAME"
+  - sleep 5
+  - mkdir -p /root/.docker/
+  - cp $JTP_DOCKER_CONFIG /root/.docker/config.json
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $REGISTRY_NAME
+  - cat /root/.docker/config.json
+  - docker info
+  script:
+  - docker build -t $IMAGE_NAME .
+  - docker push $IMAGE_NAME
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+    changes:
+    - dockerfile
+    - .gitlab-ci.yml
