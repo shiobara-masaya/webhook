@@ -1,10 +1,20 @@
-# jtp-webhook
+# webhookサーバー
 
-webhookサーバー
+webhookサーバーとその前段にnginxを配置し、nginxでBASIC認証、https対応したwebhook処理を行う  
+webhookサーバーには<https://github.com/adnanh/webhook>を用いる
 
 ## 準備
 
-### passwdファイル作成
+### 使用ツール
+
+* docker
+* docker compose
+* make
+* openssl
+
+### BASIC認証のためのpasswdファイル作成
+
+本リポジトリには`./nginx/ssl`に以下作成済
 
 ```sh
 sudo apt-get install apache2-utils
@@ -12,7 +22,7 @@ htpasswd -bc ./nginx/.htpasswd admin admin
 htpasswd -b ./nginx/.htpasswd user user
 ```
 
-### hostsファイル(/etc/hosts)編集
+### webhookのためのホストをhostsファイル(/etc/hosts)に登録
 
 以下を追記
 
@@ -31,35 +41,16 @@ generateHosts = false
 
 ### 他各種設定
 
-* プロキシ除外設定
+* hostsファイルに設定したホストをプロキシ除外する
   * ターミナル環境変数
   * docker クライアント、サーバ
 
-## 環境起動
+### 自己ルート証明書、自己中間証明書、自己サーバ証明書の発行
 
-```sh
-make start
-```
-
-## ログ確認
-
-```sh
-docker logs --follow webhook
-docker logs --follow nginx
-```
-
-## テストwebhook発行
-
-```sh
-# HTTP、サーバ直接、認証なし
-curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTP通信","data":{"field2":"サーバ直接", "field3":"認証なし"}}' http://localhost:9000/hooks/test
-# HTTP、nginx経由、認証あり
-curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTP通信","data":{"field2":"NGINX経由", "field3":"BASIC認証あり"}}' http://hoge.com/hooks/test -u user:user
-# HTTPS、nginx経由、認証あり
-curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTPS通信","data":{"field2":"NGINX経由", "field3":"BASIC認証あり"}}' https://hoge.com/hooks/test -u user:user
-```
-
-## 自己ルート証明書、自己中間証明書、自己サーバ証明書発行
+自己ルート証明書、自己中間証明書、自己サーバ証明書を発行し、  
+クライアントに作成した自己ルート証明書を登録する  
+これにより全ての手順が通るHTTPS通信が可能となる  
+本リポジトリには`./root-ca`に以下作成済
 
 ```sh
 # ルート証明書用秘密鍵生成
@@ -100,19 +91,53 @@ sudo cp ./root-ca/pki/cert/rootCA.crt /usr/local/share/ca-certificates/rootCA.cr
 sudo update-ca-certificates
 ```
 
-## 環境停止
+## 稼働
+
+### 環境起動
+
+```sh
+make start
+```
+
+### ログ確認
+
+```sh
+docker logs --follow webhook
+docker logs --follow nginx
+```
+
+### テストwebhook発行
+
+```sh
+# HTTP、webhookサーバ直接、認証なし
+curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTP通信","data":{"field2":"サーバ直接", "field3":"認証なし"}}' http://localhost:9000/hooks/test
+# HTTP、nginx経由、認証あり
+curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTP通信","data":{"field2":"NGINX経由", "field3":"BASIC認証あり"}}' http://hoge.com/hooks/test -u user:user
+# HTTPS、nginx経由、認証あり
+curl -v -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"field1":"HTTPS通信","data":{"field2":"NGINX経由", "field3":"BASIC認証あり"}}' https://hoge.com/hooks/test -u user:user
+```
+
+### 環境停止
 
 ```sh
 make stop
 ```
 
-## RocketChatへのAPI発行
+### その他
 
-```sh
-curl --request POST --url https://10.169.38.56:3000/api/v1/login -H 'accept: application/json' -H 'content-type: application/json' -d '{"user": "shiobara.m", "password": "ddg173"}'
+[`makefile`](makefile)参照
 
-# TETRAから
-curl -vk -H 'Content-Type: application/json' --data '{"username":"DataDog","icon_emoji":":datadog:","text":"Example message","attachments":[{"title":"Rocket.Chat","title_link":"https://rocket.chat","text":"Rocket.Chat, the best open source chat","color":"#764FA5"}]}' https://tools.tsp-service.jp/chat/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW | jq
-# 運用サーバから
-curl -vk -H 'Content-Type: application/json' --data '{"username":"DataDog","icon_emoji":":datadog:","text":"Example message","attachments":[{"title":"Rocket.Chat","title_link":"https://rocket.chat","text":"Rocket.Chat, the best open source chat","color":"#764FA5"}]}' https://10.169.38.55/chat/hooks/Wjzdq7fLWRJdgzKdy/tZSCTfC9SBx33ztcFAFg9SYQegob22PvjHymPMkFaQvEnKKW | jq
-```
+## 追補 webhookサーバの設定
+
+* [`./webhook/hooks.yaml`](./webhook/hooks.yaml):webhookサーバのコンフィグファイル
+  * `id`: 各webhook APIのエンドポイントを識別するID
+  * `execute-command`: 実行されるシェルスクリプトのパス
+  * `command-working-directory`: 実行ディレクトリ
+  * `pass-arguments-to-command`: シェルスクリプトに渡す引数を抽出するためのAPIのJSONペイロード定義  
+    詳細は<https://github.com/adnanh/webhook>参照
+* `./webhook/scripts/`:実行されるシェルスクリプトを配置するディレクトリ
+* エンドポイント:`/hooks/{hooks.yamlで定義したid}`
+* 実行するシェルスクリプトはwebhookサーバ上で実行されるため、用いるツール類はコンテナイメージ内にインストールしている([`dockerfile`](dockerfile))  
+  volumeマウント等でホストマシン上のツールを呼び出すことも可能かもしれないが試していない(2025/2/27現在)  
+  コンテナイメージにインストールするのが確実
+
